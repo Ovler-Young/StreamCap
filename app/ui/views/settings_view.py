@@ -1,5 +1,6 @@
 import asyncio
 import os
+import threading
 
 import flet as ft
 
@@ -12,17 +13,78 @@ from ..base_page import PageBase
 from ..components.dialogs.help_dialog import HelpDialog
 
 
+class GlobalSettingsState:
+    """Global shared settings state for web mode.
+    
+    In web mode, multiple browser connections create multiple App instances,
+    but they should all share the same configuration to ensure consistency
+    with background tasks.
+    """
+    _user_config = None
+    _cookies_config = None
+    _accounts_config = None
+    _lock = threading.Lock()
+    _initialized = False
+
+    @classmethod
+    def initialize(cls, config_manager):
+        """Initialize global settings from disk (only once)."""
+        with cls._lock:
+            if not cls._initialized:
+                cls._user_config = config_manager.load_user_config()
+                cls._cookies_config = config_manager.load_cookies_config()
+                cls._accounts_config = config_manager.load_accounts_config()
+                cls._initialized = True
+                logger.info("GlobalSettingsState initialized")
+
+    @classmethod
+    def get_user_config(cls):
+        return cls._user_config
+
+    @classmethod
+    def set_user_config(cls, config):
+        with cls._lock:
+            cls._user_config = config
+
+    @classmethod
+    def get_cookies_config(cls):
+        return cls._cookies_config
+
+    @classmethod
+    def set_cookies_config(cls, config):
+        with cls._lock:
+            cls._cookies_config = config
+
+    @classmethod
+    def get_accounts_config(cls):
+        return cls._accounts_config
+
+    @classmethod
+    def set_accounts_config(cls, config):
+        with cls._lock:
+            cls._accounts_config = config
+
+    @classmethod
+    def is_initialized(cls):
+        return cls._initialized
+
+
 class SettingsPage(PageBase):
     def __init__(self, app):
         super().__init__(app)
         self.page_name = "settings"
         self.config_manager = self.app.config_manager
 
-        self.user_config = self.config_manager.load_user_config()
+        # Initialize global settings state if not already done
+        GlobalSettingsState.initialize(self.config_manager)
+
+        # Use global shared config for web mode consistency
+        self._local_user_config = None
+        self._local_cookies_config = None
+        self._local_accounts_config = None
+
         self.language_option = self.config_manager.load_language_config()
         self.default_config = self.config_manager.load_default_config()
-        self.cookies_config = self.config_manager.load_cookies_config()
-        self.accounts_config = self.config_manager.load_accounts_config()
 
         self.language_code = None
         self.default_language = None
@@ -37,6 +99,36 @@ class SettingsPage(PageBase):
         self.load_language()
         self.init_unsaved_changes()
         self.page.on_keyboard_event = self.on_keyboard
+
+    @property
+    def user_config(self):
+        """Get user config from global shared state."""
+        return GlobalSettingsState.get_user_config()
+
+    @user_config.setter
+    def user_config(self, value):
+        """Set user config to global shared state."""
+        GlobalSettingsState.set_user_config(value)
+
+    @property
+    def cookies_config(self):
+        """Get cookies config from global shared state."""
+        return GlobalSettingsState.get_cookies_config()
+
+    @cookies_config.setter
+    def cookies_config(self, value):
+        """Set cookies config to global shared state."""
+        GlobalSettingsState.set_cookies_config(value)
+
+    @property
+    def accounts_config(self):
+        """Get accounts config from global shared state."""
+        return GlobalSettingsState.get_accounts_config()
+
+    @accounts_config.setter
+    def accounts_config(self, value):
+        """Set accounts config to global shared state."""
+        GlobalSettingsState.set_accounts_config(value)
 
     async def load(self):
         self.content_area.clean()
@@ -196,17 +288,21 @@ class SettingsPage(PageBase):
     async def save_user_config_after_delay(self, delay):
         await asyncio.sleep(delay)
         if self.has_unsaved_changes['user_config']:
+            # user_config property already updates GlobalSettingsState
             await self.config_manager.save_user_config(self.user_config)
+            logger.debug("User config saved to disk")
 
     async def save_cookies_after_delay(self, delay):
         await asyncio.sleep(delay)
         if self.has_unsaved_changes['cookies_config']:
             await self.config_manager.save_cookies_config(self.cookies_config)
+            logger.debug("Cookies config saved to disk")
 
     async def save_accounts_after_delay(self, delay):
         await asyncio.sleep(delay)
         if self.has_unsaved_changes['accounts_config']:
             await self.config_manager.save_accounts_config(self.accounts_config)
+            logger.debug("Accounts config saved to disk")
 
     def get_video_save_path(self):
         live_save_path = self.get_config_value("live_save_path")
