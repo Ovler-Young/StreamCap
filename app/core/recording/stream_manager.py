@@ -227,6 +227,7 @@ class LiveStreamRecorder:
         self.recording.recording_dir = os.path.dirname(save_path)
         os.makedirs(self.recording.recording_dir, exist_ok=True)
         record_url = self._get_record_url(stream_info)
+        rtmp_url = self._get_info("rtmp_url")
         self.set_preview_url(stream_info)
 
         try:
@@ -276,7 +277,8 @@ class LiveStreamRecorder:
                 segment_record=self.segment_record,
                 segment_time=self.segment_time,
                 full_path=save_path,
-                headers=self.get_headers_params(record_url, self.platform_key)
+                headers=self.get_headers_params(record_url, self.platform_key),
+                rtmp_url=rtmp_url
             )
             ffmpeg_command = ffmpeg_builder.build_command()
             self.app.page.run_task(

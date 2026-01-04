@@ -36,6 +36,7 @@ class FFmpegCommandBuilder(abc.ABC):
         full_path: str | None = None,
         headers: str | None = None,
         proxy: str | None = None,
+        rtmp_url: str | None = None,
     ):
         """
         Initializes the FFmpegCommandBuilder.
@@ -47,6 +48,7 @@ class FFmpegCommandBuilder(abc.ABC):
         :param full_path: Full path where the output file will be saved.
         :param headers: Additional headers to include in the request.
         :param proxy: Proxy server URL to use for the connection.
+        :param rtmp_url: Optional RTMP URL to push the stream to.
         """
         self.record_url = record_url
         self.is_overseas = is_overseas
@@ -55,6 +57,7 @@ class FFmpegCommandBuilder(abc.ABC):
         self.full_path = full_path or ""
         self.proxy = proxy or ""
         self.headers = headers or ""
+        self.rtmp_url = rtmp_url or ""
 
     @abc.abstractmethod
     def build_command(self) -> list[str]:
@@ -103,3 +106,19 @@ class FFmpegCommandBuilder(abc.ABC):
             command.insert(2, self.proxy)
 
         return command
+
+    def _get_rtmp_command(self) -> list[str]:
+        """
+        Constructs the RTMP output part of the FFmpeg command.
+
+        :return: List of strings representing the RTMP output arguments.
+        """
+        if not self.rtmp_url:
+            return []
+        
+        return [
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-f", "flv",
+            self.rtmp_url
+        ]

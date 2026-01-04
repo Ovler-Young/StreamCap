@@ -26,4 +26,5 @@ class FLVCommandBuilder(FFmpegCommandBuilder):
                 self.full_path
             ]
         command.extend(additional_commands)
+        command.extend(self._get_rtmp_command())
         return command

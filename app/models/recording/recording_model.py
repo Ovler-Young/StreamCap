@@ -18,7 +18,8 @@ class Recording:
         recording_dir,
         enabled_message_push,
         only_notify_no_record,
-        flv_use_direct_download
+        flv_use_direct_download,
+        rtmp_url=None
     ):
         """
         Initialize a recording object.
@@ -38,6 +39,7 @@ class Recording:
         :param enabled_message_push: Whether to enable message push.
         :param only_notify_no_record: Whether to only notify when no record is made.
         :param flv_use_direct_download: Whether to use direct downloader to cache FLV stream.
+        :param rtmp_url: Optional RTMP URL to push the stream to.
         """
 
         self.rec_id = rec_id
@@ -55,6 +57,7 @@ class Recording:
         self.enabled_message_push = enabled_message_push
         self.only_notify_no_record = only_notify_no_record
         self.flv_use_direct_download = flv_use_direct_download
+        self.rtmp_url = rtmp_url
         self.scheduled_time_range = None
         self.title = f"{streamer_name} - {self.quality}"
         self.speed = "X KB/s"
@@ -103,7 +106,8 @@ class Recording:
             "platform": self.platform,
             "platform_key": self.platform_key,
             "only_notify_no_record": self.only_notify_no_record,
-            "flv_use_direct_download": self.flv_use_direct_download
+            "flv_use_direct_download": self.flv_use_direct_download,
+            "rtmp_url": self.rtmp_url
         }
 
     @classmethod
@@ -124,7 +128,8 @@ class Recording:
             data.get("recording_dir"),
             data.get("enabled_message_push"),
             data.get("only_notify_no_record"),
-            data.get("flv_use_direct_download")
+            data.get("flv_use_direct_download"),
+            data.get("rtmp_url")
         )
         recording.title = data.get("title", recording.title)
         recording.display_title = data.get("display_title", recording.title)

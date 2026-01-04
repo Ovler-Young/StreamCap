@@ -31,4 +31,5 @@ class TSCommandBuilder(FFmpegCommandBuilder):
             ]
 
         command.extend(additional_commands)
+        command.extend(self._get_rtmp_command())
         return command

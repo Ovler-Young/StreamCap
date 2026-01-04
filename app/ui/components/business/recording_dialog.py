@@ -283,6 +283,14 @@ class RecordingDialog:
             width=500,
         )
 
+        rtmp_url_field = ft.TextField(
+            label="RTMP URL (" + self._["optional"] + ")",
+            hint_text=self._["example"] + "：rtmp://ip:port/live/stream_key",
+            border_radius=5,
+            filled=False,
+            value=initial_values.get("rtmp_url"),
+        )
+
         hint_text_dict = {
             "en": "Example:\n0，https://v.douyin.com/AbcdE，nickname1\n0，https://v.douyin.com/EfghI，nickname2\n\nPS: "
             "0=original image or Blu ray, 1=ultra clear, 2=high-definition, 3=standard definition, 4=smooth\n",
@@ -328,8 +336,12 @@ class RecordingDialog:
                                 segment_input,
                                 scheduled_setting_dropdown,
                                 *time_rows,
+                                segment_input,
+                                scheduled_setting_dropdown,
+                                *time_rows,
                                 message_push_dropdown,
-                                no_record_dropdown
+                                no_record_dropdown,
+                                rtmp_url_field
                             ],
                             tight=True,
                             spacing=10,
@@ -395,6 +407,7 @@ class RecordingDialog:
                         "enabled_message_push": message_push_dropdown.value == "true",
                         "only_notify_no_record": no_record_dropdown.value == "true",
                         "flv_use_direct_download": flv_use_direct_download_dropdown.value == "true",
+                        "rtmp_url": rtmp_url_field.value.strip() if rtmp_url_field.value else None,
                     }
                 ]
 
@@ -475,6 +488,7 @@ class RecordingDialog:
                         "quality_info": self._[VideoQuality.OD],
                         "title": title,
                         "display_title": display_title,
+                        "rtmp_url": None, # Batch entry does not support RTMP URL for now
                     }
                     batch_url_list.append(url.strip())
                     recordings_info.append(recording_info)
