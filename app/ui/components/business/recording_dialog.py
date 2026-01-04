@@ -284,8 +284,8 @@ class RecordingDialog:
         )
 
         rtmp_url_field = ft.TextField(
-            label="RTMP URL (" + self._["optional"] + ")",
-            hint_text=self._["example"] + "：rtmp://ip:port/live/stream_key",
+            label="RTMP URL",
+            hint_text=self._["example"] + ": rtmp://ip:port/live/stream_key",
             border_radius=5,
             filled=False,
             value=initial_values.get("rtmp_url"),
